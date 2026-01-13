@@ -83,9 +83,16 @@ namespace TarjeteroApp
 
             btnGuardar.Click += BtnGuardar_Click;
             btnModificar.Click += BtnModificar_Click;
+            btnEliminar.Click += BtnEliminar_Click;
             btnLimpiar.Click += (s, e) => LimpiarCampos();
 
-            panelBotones.Controls.AddRange(new Control[] { btnGuardar, btnModificar, btnLimpiar, btnEliminar });
+            // Search box
+            Label lblBuscar = new Label() { Text = "Buscar:", AutoSize = true, Margin = new Padding(20, 8, 5, 0) };
+            TextBox txtBuscar = new TextBox() { Width = 200, Margin = new Padding(0, 5, 0, 0) };
+            txtBuscar.PlaceholderText = "Nombre, Apellido o HC...";
+            txtBuscar.TextChanged += (s, e) => FiltrarGrid(txtBuscar.Text);
+
+            panelBotones.Controls.AddRange(new Control[] { btnGuardar, btnModificar, btnLimpiar, btnEliminar, lblBuscar, txtBuscar });
 
             // Grid
             gridPacientes = new DataGridView();
@@ -255,6 +262,61 @@ namespace TarjeteroApp
             catch (Exception ex)
             {
                 MessageBox.Show("Error al modificar paciente: " + ex.Message);
+            }
+        }
+
+        private void BtnEliminar_Click(object? sender, EventArgs e)
+        {
+            if (idSeleccionado == null)
+            {
+                MessageBox.Show("Seleccione un paciente para eliminar.");
+                return;
+            }
+
+            var confirmResult = MessageBox.Show("¿Está seguro de eliminar este paciente?",
+                                                "Confirmar Eliminación",
+                                                MessageBoxButtons.YesNo,
+                                                MessageBoxIcon.Warning);
+
+            if (confirmResult == DialogResult.Yes)
+            {
+                try
+                {
+                    string sql = "DELETE FROM Pacientes WHERE id_paciente = @id";
+                    DatabaseHelper.ExecuteNonQuery(sql, new SQLiteParameter[] { new SQLiteParameter("@id", idSeleccionado) });
+                    MessageBox.Show("Paciente eliminado correctamente.");
+                    LimpiarCampos();
+                    LoadData();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al eliminar: " + ex.Message);
+                }
+            }
+        }
+
+        private void FiltrarGrid(string texto)
+        {
+            try
+            {
+                if (gridPacientes.DataSource is DataTable dt)
+                {
+                    if (string.IsNullOrWhiteSpace(texto))
+                    {
+                        dt.DefaultView.RowFilter = "";
+                    }
+                    else
+                    {
+                        // Escape single quotes for safety
+                        string safeText = texto.Replace("'", "''"); 
+                        dt.DefaultView.RowFilter = string.Format("nombres LIKE '%{0}%' OR apellidos LIKE '%{0}%' OR historia_clinica LIKE '%{0}%'", safeText);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silent fail or log
+                Console.WriteLine("Error filter: " + ex.Message);
             }
         }
     }

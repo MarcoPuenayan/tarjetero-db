@@ -25,7 +25,7 @@ namespace TarjeteroApp
 
         private void InitializeComponent()
         {
-            this.Text = "Sistema de Tarjetero de Vacunación - Marianitas 2025";
+            this.Text = "Sistema de Tarjetero de Vacunación - Marianitas DB";
             this.Size = new Size(1024, 768);
             this.StartPosition = FormStartPosition.CenterScreen;
 
@@ -55,8 +55,9 @@ namespace TarjeteroApp
             itemAdminVacunas = new ToolStripMenuItem("Gestión Biológicos (Vacunas)", null, (s, e) => new GestionVacunasForm().ShowDialog(this));
             itemAdminPersonal = new ToolStripMenuItem("Gestión Personal Salud", null, (s, e) => new GestionPersonalForm().ShowDialog(this));
             itemAdminRepresentantes = new ToolStripMenuItem("Gestión Representantes", null, (s, e) => new GestionRepresentantesForm().ShowDialog(this));
+            var itemImportar = new ToolStripMenuItem("Importar Tarjetero (ODS)", null, (s, e) => new ImportarODSForm().ShowDialog(this));
             
-            menuAdministracion.DropDownItems.AddRange(new ToolStripItem[] { itemAdminVacunas, itemAdminPersonal, itemAdminRepresentantes });
+            menuAdministracion.DropDownItems.AddRange(new ToolStripItem[] { itemAdminVacunas, itemAdminPersonal, itemAdminRepresentantes, new ToolStripSeparator(), itemImportar });
 
             menuStrip.Items.AddRange(new ToolStripItem[] { menuArchivo, menuPacientes, menuVacunacion, itemReportes, menuAdministracion });
             this.MainMenuStrip = menuStrip;
@@ -64,7 +65,7 @@ namespace TarjeteroApp
             
             // Background branding
             Label lblTitle = new Label();
-            lblTitle.Text = "Centro de Salud Marianitas";
+            lblTitle.Text = "DB Centro de Salud Marianitas";
             lblTitle.Font = new Font("Segoe UI", 24, FontStyle.Bold);
             lblTitle.AutoSize = true;
             lblTitle.Location = new Point(50, 100);
