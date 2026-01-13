@@ -47,6 +47,9 @@ namespace TarjeteroApp
             itemNuevaVacuna = new ToolStripMenuItem("Registrar Vacuna", null, OpenVacunacionForm);
             menuVacunacion.DropDownItems.Add(itemNuevaVacuna);
 
+            // Reportes
+            var itemReportes = new ToolStripMenuItem("Reportes", null, (s, e) => new ReportesForm().ShowDialog(this));
+            
             // Administración
             menuAdministracion = new ToolStripMenuItem("Administración");
             itemAdminVacunas = new ToolStripMenuItem("Gestión Biológicos (Vacunas)", null, (s, e) => new GestionVacunasForm().ShowDialog(this));
@@ -55,7 +58,7 @@ namespace TarjeteroApp
             
             menuAdministracion.DropDownItems.AddRange(new ToolStripItem[] { itemAdminVacunas, itemAdminPersonal, itemAdminRepresentantes });
 
-            menuStrip.Items.AddRange(new ToolStripItem[] { menuArchivo, menuPacientes, menuVacunacion, menuAdministracion });
+            menuStrip.Items.AddRange(new ToolStripItem[] { menuArchivo, menuPacientes, menuVacunacion, itemReportes, menuAdministracion });
             this.MainMenuStrip = menuStrip;
             this.Controls.Add(menuStrip);
             

@@ -11,7 +11,8 @@ namespace TarjeteroApp
         private DataGridView grid;
         private TextBox txtCedula, txtNombres, txtTelefono, txtDireccion;
         private ComboBox cmbRelacion;
-        private Button btnGuardar, btnEliminar, btnLimpiar;
+        private Button btnGuardar, btnEliminar, btnLimpiar, btnModificar;
+        private int? idSeleccionado = null;
 
         public GestionRepresentantesForm()
         {
@@ -25,6 +26,7 @@ namespace TarjeteroApp
             {
                 var dt = DatabaseHelper.ExecuteQuery("SELECT * FROM Representantes");
                 grid.DataSource = dt;
+                LimpiarCampos();
             }
             catch (Exception ex)
             {
@@ -77,17 +79,22 @@ namespace TarjeteroApp
             panelBotones.Padding = new Padding(10, 0, 10, 0);
 
             btnGuardar = new Button() { Text = "Guardar", Width = 90 };
+            btnModificar = new Button() { Text = "Modificar", Width = 90, Enabled = false };
             btnLimpiar = new Button() { Text = "Limpiar", Width = 90 };
             btnEliminar = new Button() { Text = "Eliminar", Width = 90, Enabled = false };
 
             btnGuardar.Click += BtnGuardar_Click;
-            btnLimpiar.Click += (s, e) => { txtCedula.Clear(); txtNombres.Clear(); txtTelefono.Clear(); txtDireccion.Clear(); };
+            btnModificar.Click += BtnModificar_Click;
+            btnLimpiar.Click += (s, e) => LimpiarCampos();
 
-            panelBotones.Controls.AddRange(new Control[] { btnGuardar, btnLimpiar, btnEliminar });
+            panelBotones.Controls.AddRange(new Control[] { btnGuardar, btnModificar, btnLimpiar, btnEliminar });
 
             grid = new DataGridView();
             grid.Dock = DockStyle.Fill;
             grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            grid.MultiSelect = false;
+            grid.SelectionChanged += Grid_SelectionChanged;
 
             this.Controls.Add(grid);
             this.Controls.Add(panelBotones);
@@ -116,13 +123,84 @@ namespace TarjeteroApp
 
                 DatabaseHelper.ExecuteNonQuery(query, parameters);
                 MessageBox.Show("Representante guardado exitosamente.");
-                // Limpiar
-                txtCedula.Clear(); txtNombres.Clear(); txtTelefono.Clear(); txtDireccion.Clear();
+                LimpiarCampos();
                 LoadData();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al guardar: " + ex.Message);
+            }
+        }
+
+        private void LimpiarCampos()
+        {
+            txtCedula.Clear();
+            txtNombres.Clear();
+            cmbRelacion.SelectedIndex = -1;
+            txtTelefono.Clear();
+            txtDireccion.Clear();
+            idSeleccionado = null;
+            btnModificar.Enabled = false;
+            btnGuardar.Enabled = true;
+            btnEliminar.Enabled = false;
+            grid.ClearSelection();
+        }
+
+        private void Grid_SelectionChanged(object? sender, EventArgs e)
+        {
+            if (grid.SelectedRows.Count > 0)
+            {
+                var row = grid.SelectedRows[0];
+                if (row.Cells["id_representante"].Value == DBNull.Value || row.Cells["id_representante"].Value == null) return;
+
+                idSeleccionado = Convert.ToInt32(row.Cells["id_representante"].Value);
+                txtCedula.Text = row.Cells["cedula"].Value?.ToString();
+                txtNombres.Text = row.Cells["nombres"].Value?.ToString();
+                cmbRelacion.SelectedItem = row.Cells["relacion"].Value?.ToString();
+                txtTelefono.Text = row.Cells["telefono"].Value?.ToString();
+                txtDireccion.Text = row.Cells["direccion"].Value?.ToString();
+
+                btnModificar.Enabled = true;
+                btnGuardar.Enabled = false;
+                btnEliminar.Enabled = true;
+            }
+        }
+
+        private void BtnModificar_Click(object? sender, EventArgs e)
+        {
+            if (idSeleccionado == null)
+            {
+                MessageBox.Show("Seleccione un registro para modificar.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtNombres.Text))
+            {
+                MessageBox.Show("El nombre es obligatorio.");
+                return;
+            }
+
+            try 
+            {
+                string sql = "UPDATE Representantes SET cedula = @c, nombres = @n, relacion = @r, telefono = @t, direccion = @d WHERE id_representante = @id";
+                var parameters = new SQLiteParameter[]
+                {
+                    new SQLiteParameter("@c", txtCedula.Text),
+                    new SQLiteParameter("@n", txtNombres.Text),
+                    new SQLiteParameter("@r", cmbRelacion.SelectedItem?.ToString() ?? ""),
+                    new SQLiteParameter("@t", txtTelefono.Text),
+                    new SQLiteParameter("@d", txtDireccion.Text),
+                    new SQLiteParameter("@id", idSeleccionado)
+                };
+
+                DatabaseHelper.ExecuteNonQuery(sql, parameters);
+                MessageBox.Show("Representante modificado correctamente.");
+                LimpiarCampos();
+                LoadData();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al modificar representante: " + ex.Message);
             }
         }
     }

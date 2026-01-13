@@ -10,7 +10,8 @@ namespace TarjeteroApp
     {
         private DataGridView grid;
         private TextBox txtCedula, txtNombres, txtCargo;
-        private Button btnGuardar, btnEliminar, btnLimpiar;
+        private Button btnGuardar, btnEliminar, btnLimpiar, btnModificar;
+        private int? idSeleccionado = null;
 
         public GestionPersonalForm()
         {
@@ -24,6 +25,7 @@ namespace TarjeteroApp
             {
                 var dt = DatabaseHelper.ExecuteQuery("SELECT * FROM Personal_Salud");
                 grid.DataSource = dt;
+                LimpiarCampos();
             }
             catch (Exception ex)
             {
@@ -65,17 +67,22 @@ namespace TarjeteroApp
             panelBotones.Padding = new Padding(10, 0, 10, 0);
 
             btnGuardar = new Button() { Text = "Guardar", Width = 90 };
+            btnModificar = new Button() { Text = "Modificar", Width = 90, Enabled = false };
             btnLimpiar = new Button() { Text = "Limpiar", Width = 90 };
             btnEliminar = new Button() { Text = "Eliminar", Width = 90, Enabled = false };
 
             btnGuardar.Click += BtnGuardar_Click;
-            btnLimpiar.Click += (s, e) => { txtCedula.Clear(); txtNombres.Clear(); txtCargo.Clear(); };
+            btnModificar.Click += BtnModificar_Click;
+            btnLimpiar.Click += (s, e) => LimpiarCampos();
 
-            panelBotones.Controls.AddRange(new Control[] { btnGuardar, btnLimpiar, btnEliminar });
+            panelBotones.Controls.AddRange(new Control[] { btnGuardar, btnModificar, btnLimpiar, btnEliminar });
 
             grid = new DataGridView();
             grid.Dock = DockStyle.Fill;
             grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            grid.MultiSelect = false;
+            grid.SelectionChanged += Grid_SelectionChanged;
 
             this.Controls.Add(grid);
             this.Controls.Add(panelBotones);
@@ -102,12 +109,78 @@ namespace TarjeteroApp
 
                 DatabaseHelper.ExecuteNonQuery(query, parameters);
                 MessageBox.Show("Personal guardado exitosamente.");
-                txtCedula.Clear(); txtNombres.Clear(); txtCargo.Clear();
+                LimpiarCampos();
                 LoadData();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al guardar: " + ex.Message);
+            }
+        }
+
+        private void LimpiarCampos()
+        {
+            txtCedula.Clear();
+            txtNombres.Clear();
+            txtCargo.Clear();
+            idSeleccionado = null;
+            btnModificar.Enabled = false;
+            btnGuardar.Enabled = true;
+            btnEliminar.Enabled = false;
+            grid.ClearSelection();
+        }
+
+        private void Grid_SelectionChanged(object? sender, EventArgs e)
+        {
+            if (grid.SelectedRows.Count > 0)
+            {
+                var row = grid.SelectedRows[0];
+                if (row.Cells["id_personal"].Value == DBNull.Value || row.Cells["id_personal"].Value == null) return;
+
+                idSeleccionado = Convert.ToInt32(row.Cells["id_personal"].Value);
+                txtCedula.Text = row.Cells["cedula"].Value?.ToString();
+                txtNombres.Text = row.Cells["nombres_completos"].Value?.ToString();
+                txtCargo.Text = row.Cells["cargo"].Value?.ToString();
+
+                btnModificar.Enabled = true;
+                btnGuardar.Enabled = false;
+                btnEliminar.Enabled = true;
+            }
+        }
+
+        private void BtnModificar_Click(object? sender, EventArgs e)
+        {
+            if (idSeleccionado == null)
+            {
+                MessageBox.Show("Seleccione un registro para modificar.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtNombres.Text))
+            {
+                MessageBox.Show("El nombre es obligatorio.");
+                return;
+            }
+
+            try 
+            {
+                string sql = "UPDATE Personal_Salud SET cedula = @c, nombres_completos = @n, cargo = @cargo WHERE id_personal = @id";
+                var parameters = new SQLiteParameter[]
+                {
+                    new SQLiteParameter("@c", txtCedula.Text),
+                    new SQLiteParameter("@n", txtNombres.Text),
+                    new SQLiteParameter("@cargo", txtCargo.Text),
+                    new SQLiteParameter("@id", idSeleccionado)
+                };
+
+                DatabaseHelper.ExecuteNonQuery(sql, parameters);
+                MessageBox.Show("Personal modificado correctamente.");
+                LimpiarCampos();
+                LoadData();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al modificar personal: " + ex.Message);
             }
         }
     }

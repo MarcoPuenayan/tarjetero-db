@@ -17,6 +17,7 @@ namespace TarjeteroApp
         private TextBox txtLote;
         private RichTextBox txtObservaciones;
         private Button btnRegistrar;
+        private DataGridView gridHistorial;
 
         public RegistroVacunasForm()
         {
@@ -27,51 +28,60 @@ namespace TarjeteroApp
         private void InitializeComponent()
         {
             this.Text = "Registrar Vacuna";
-            this.Size = new Size(600, 600);
+            this.Size = new Size(1100, 650);
             this.StartPosition = FormStartPosition.CenterParent;
 
-            var panel = new TableLayoutPanel();
-            panel.Dock = DockStyle.Fill;
-            panel.Padding = new Padding(20);
-            panel.RowCount = 8;
-            panel.ColumnCount = 2;
+            SplitContainer split = new SplitContainer();
+            split.Dock = DockStyle.Fill;
+            split.Orientation = Orientation.Vertical;
+            split.SplitterDistance = 450;
+            split.BorderStyle = BorderStyle.FixedSingle;
+
+            // --- Panel Izquierdo: Formulario ---
+            var panelInput = new TableLayoutPanel();
+            panelInput.Dock = DockStyle.Fill;
+            panelInput.Padding = new Padding(20);
+            panelInput.RowCount = 8;
+            panelInput.ColumnCount = 2;
             
             // Paciente
-            panel.Controls.Add(new Label() { Text = "Paciente:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 0);
+            panelInput.Controls.Add(new Label() { Text = "Paciente:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 0);
             cmbPaciente = new ComboBox() { Width = 300, DropDownStyle = ComboBoxStyle.DropDownList };
-            panel.Controls.Add(cmbPaciente, 1, 0);
+            // Evento para cargar historial
+            cmbPaciente.SelectionChangeCommitted += (s, e) => CargarHistorial();
+            panelInput.Controls.Add(cmbPaciente, 1, 0);
 
             // Vacuna
-            panel.Controls.Add(new Label() { Text = "Vacuna:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 1);
+            panelInput.Controls.Add(new Label() { Text = "Vacuna:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 1);
             cmbVacuna = new ComboBox() { Width = 300, DropDownStyle = ComboBoxStyle.DropDownList };
-            panel.Controls.Add(cmbVacuna, 1, 1);
+            panelInput.Controls.Add(cmbVacuna, 1, 1);
             
             // Personal
-            panel.Controls.Add(new Label() { Text = "Personal Salud:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 2);
+            panelInput.Controls.Add(new Label() { Text = "Personal Salud:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 2);
             cmbPersonal = new ComboBox() { Width = 300, DropDownStyle = ComboBoxStyle.DropDownList };
-            panel.Controls.Add(cmbPersonal, 1, 2);
+            panelInput.Controls.Add(cmbPersonal, 1, 2);
 
             // Dosis
-            panel.Controls.Add(new Label() { Text = "Dosis:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 3);
+            panelInput.Controls.Add(new Label() { Text = "Dosis:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 3);
             cmbDosis = new ComboBox() { Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbDosis.Items.AddRange(new object[] { "1ra Dosis", "2da Dosis", "3ra Dosis", "Refuerzo 1", "Refuerzo 2", "Unica" });
             cmbDosis.SelectedIndex = 0;
-            panel.Controls.Add(cmbDosis, 1, 3);
+            panelInput.Controls.Add(cmbDosis, 1, 3);
 
             // Fecha
-            panel.Controls.Add(new Label() { Text = "Fecha Aplicación:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 4);
+            panelInput.Controls.Add(new Label() { Text = "Fecha Aplicación:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 4);
             dtpFecha = new DateTimePicker();
-            panel.Controls.Add(dtpFecha, 1, 4);
+            panelInput.Controls.Add(dtpFecha, 1, 4);
 
             // Lote
-            panel.Controls.Add(new Label() { Text = "Lote Biológico:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 5);
+            panelInput.Controls.Add(new Label() { Text = "Lote Biológico:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 5);
             txtLote = new TextBox() { Width = 200 };
-            panel.Controls.Add(txtLote, 1, 5);
+            panelInput.Controls.Add(txtLote, 1, 5);
 
             // Observaciones
-            panel.Controls.Add(new Label() { Text = "Observaciones:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 6);
+            panelInput.Controls.Add(new Label() { Text = "Observaciones:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 6);
             txtObservaciones = new RichTextBox() { Height = 80, Width = 300 };
-            panel.Controls.Add(txtObservaciones, 1, 6);
+            panelInput.Controls.Add(txtObservaciones, 1, 6);
 
             // Button
             btnRegistrar = new Button() { Text = "Registrar Vacunación", Height = 40, Width = 150, BackColor = Color.LightGreen };
@@ -79,9 +89,25 @@ namespace TarjeteroApp
             
             var panelBtn = new FlowLayoutPanel() { FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill };
             panelBtn.Controls.Add(btnRegistrar);
-            panel.Controls.Add(panelBtn, 1, 7);
+            panelInput.Controls.Add(panelBtn, 1, 7);
 
-            this.Controls.Add(panel);
+            split.Panel1.Controls.Add(panelInput);
+
+            // --- Panel Derecho: Historial ---
+            var groupHistory = new GroupBox() { Text = "Historial de Vacunación del Paciente", Dock = DockStyle.Fill, Padding = new Padding(10) };
+            gridHistorial = new DataGridView();
+            gridHistorial.Dock = DockStyle.Fill;
+            gridHistorial.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            gridHistorial.ReadOnly = true;
+            gridHistorial.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            gridHistorial.AllowUserToAddRows = false;
+            gridHistorial.RowHeadersVisible = false;
+            gridHistorial.BackgroundColor = SystemColors.ControlLight;
+            
+            groupHistory.Controls.Add(gridHistorial);
+            split.Panel2.Controls.Add(groupHistory);
+
+            this.Controls.Add(split);
         }
 
         private void LoadCatalogs()
@@ -92,6 +118,7 @@ namespace TarjeteroApp
                 cmbPaciente.DataSource = dtP;
                 cmbPaciente.DisplayMember = "display";
                 cmbPaciente.ValueMember = "id_paciente";
+                cmbPaciente.SelectedIndex = -1; // Limpiar selección inicial
 
                 // Vacunas
                 var dtV = DatabaseHelper.ExecuteQuery("SELECT id_vacuna, nombre_biologico || ' (' || siglas || ')' as display FROM Vacunas");
@@ -136,10 +163,64 @@ namespace TarjeteroApp
 
                 DatabaseHelper.ExecuteNonQuery(sql, parameters);
                 MessageBox.Show("Vacuna registrada exitosamente.");
-                this.Close();
+                // Recargar historial del paciente actual
+                CargarHistorial();
+                
+                // Limpiar campos excepto paciente para facilitar carga masiva? O limpiar todo? 
+                // Mejor limpiar todo excepto paciente si se quiere seguir cargando.
+                // Por ahora cerramos o limpiamos. El requerimiento original cerraba el form. 
+                // Si agregamos historial, quiza el usuario quiere ver que se agregó.
+                // this.Close(); // Comentado para permitir seguir viendo historial
+                
+                // Limpiar campos vacunación
+                txtLote.Clear();
+                txtObservaciones.Clear();
             }
             catch(Exception ex) {
                 MessageBox.Show("Error registrando: " + ex.Message);
+            }
+        }
+
+        private void CargarHistorial()
+        {
+            if (cmbPaciente.SelectedValue == null) 
+            {
+                gridHistorial.DataSource = null;
+                return;
+            }
+            
+            try 
+            {
+                // Validación para evitar cast inválido si el valor no es numérico (bug combo vacío)
+                if (!long.TryParse(cmbPaciente.SelectedValue.ToString(), out long idPaciente)) return;
+
+                string sql = @"
+                    SELECT 
+                        r.id_registro,
+                        v.nombre_biologico AS 'Vacuna',
+                        r.numero_dosis AS 'Dosis',
+                        STRFTIME('%Y-%m-%d', r.fecha_aplicacion) AS 'Fecha',
+                        ps.nombres_completos AS 'Responsable',
+                        r.lote_biologico AS 'Lote'
+                    FROM Registro_Vacunacion r
+                    JOIN Vacunas v ON r.id_vacuna = v.id_vacuna
+                    JOIN Personal_Salud ps ON r.id_personal = ps.id_personal
+                    WHERE r.id_paciente = @pid
+                    ORDER BY r.fecha_aplicacion DESC";
+                
+                var parameters = new SQLiteParameter[] {
+                    new SQLiteParameter("@pid", idPaciente)
+                };
+
+                var dt = DatabaseHelper.ExecuteQuery(sql, parameters);
+                gridHistorial.DataSource = dt;
+                
+                if (gridHistorial.Columns["id_registro"] != null)
+                    gridHistorial.Columns["id_registro"].Visible = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error cargando historial: " + ex.Message);
             }
         }
     }
