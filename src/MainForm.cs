@@ -10,9 +10,13 @@ namespace TarjeteroApp
         private ToolStripMenuItem menuArchivo;
         private ToolStripMenuItem menuPacientes;
         private ToolStripMenuItem menuVacunacion;
+        private ToolStripMenuItem menuAdministracion;
         private ToolStripMenuItem itemSalir;
         private ToolStripMenuItem itemGestionarPacientes;
         private ToolStripMenuItem itemNuevaVacuna;
+        private ToolStripMenuItem itemAdminVacunas;
+        private ToolStripMenuItem itemAdminPersonal;
+        private ToolStripMenuItem itemAdminRepresentantes;
 
         public MainForm()
         {
@@ -43,7 +47,15 @@ namespace TarjeteroApp
             itemNuevaVacuna = new ToolStripMenuItem("Registrar Vacuna", null, OpenVacunacionForm);
             menuVacunacion.DropDownItems.Add(itemNuevaVacuna);
 
-            menuStrip.Items.AddRange(new ToolStripItem[] { menuArchivo, menuPacientes, menuVacunacion });
+            // Administración
+            menuAdministracion = new ToolStripMenuItem("Administración");
+            itemAdminVacunas = new ToolStripMenuItem("Gestión Biológicos (Vacunas)", null, (s, e) => new GestionVacunasForm().ShowDialog(this));
+            itemAdminPersonal = new ToolStripMenuItem("Gestión Personal Salud", null, (s, e) => new GestionPersonalForm().ShowDialog(this));
+            itemAdminRepresentantes = new ToolStripMenuItem("Gestión Representantes", null, (s, e) => new GestionRepresentantesForm().ShowDialog(this));
+            
+            menuAdministracion.DropDownItems.AddRange(new ToolStripItem[] { itemAdminVacunas, itemAdminPersonal, itemAdminRepresentantes });
+
+            menuStrip.Items.AddRange(new ToolStripItem[] { menuArchivo, menuPacientes, menuVacunacion, menuAdministracion });
             this.MainMenuStrip = menuStrip;
             this.Controls.Add(menuStrip);
             
