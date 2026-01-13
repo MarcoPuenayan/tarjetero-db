@@ -1,0 +1,25 @@
+# Visual Studio & .NET
+[Bb]in/
+[Oo]bj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+packages/
+
+# Database (SQLite)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+tarjetero.db
+
+# OS Generated
+.DS_Store
+Thumbs.db
+
+# Office / Data files
+~$*
+*.tmp

@@ -1,0 +1,72 @@
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace TarjeteroApp
+{
+    public class MainForm : Form
+    {
+        private MenuStrip menuStrip;
+        private ToolStripMenuItem menuArchivo;
+        private ToolStripMenuItem menuPacientes;
+        private ToolStripMenuItem menuVacunacion;
+        private ToolStripMenuItem itemSalir;
+        private ToolStripMenuItem itemGestionarPacientes;
+        private ToolStripMenuItem itemNuevaVacuna;
+
+        public MainForm()
+        {
+            InitializeComponent();
+        }
+
+        private void InitializeComponent()
+        {
+            this.Text = "Sistema de Tarjetero de Vacunación - Marianitas 2025";
+            this.Size = new Size(1024, 768);
+            this.StartPosition = FormStartPosition.CenterScreen;
+
+            // MENU
+            menuStrip = new MenuStrip();
+            
+            // Archivo
+            menuArchivo = new ToolStripMenuItem("Archivo");
+            itemSalir = new ToolStripMenuItem("Salir", null, (s, e) => this.Close());
+            menuArchivo.DropDownItems.Add(itemSalir);
+
+            // Pacientes
+            menuPacientes = new ToolStripMenuItem("Pacientes");
+            itemGestionarPacientes = new ToolStripMenuItem("Gestionar Pacientes", null, OpenPacientesForm);
+            menuPacientes.DropDownItems.Add(itemGestionarPacientes);
+
+            // Vacunación
+            menuVacunacion = new ToolStripMenuItem("Vacunación");
+            itemNuevaVacuna = new ToolStripMenuItem("Registrar Vacuna", null, OpenVacunacionForm);
+            menuVacunacion.DropDownItems.Add(itemNuevaVacuna);
+
+            menuStrip.Items.AddRange(new ToolStripItem[] { menuArchivo, menuPacientes, menuVacunacion });
+            this.MainMenuStrip = menuStrip;
+            this.Controls.Add(menuStrip);
+            
+            // Background branding
+            Label lblTitle = new Label();
+            lblTitle.Text = "Centro de Salud Marianitas";
+            lblTitle.Font = new Font("Segoe UI", 24, FontStyle.Bold);
+            lblTitle.AutoSize = true;
+            lblTitle.Location = new Point(50, 100);
+            this.Controls.Add(lblTitle);
+        }
+
+        private void OpenPacientesForm(object? sender, EventArgs e)
+        {
+            // En una app real usaríamos inyección de dependencias o Singleton para formularios
+            var frm = new PacientesForm();
+            frm.ShowDialog(this);
+        }
+
+        private void OpenVacunacionForm(object? sender, EventArgs e)
+        {
+            var frm = new RegistroVacunasForm();
+            frm.ShowDialog(this);
+        }
+    }
+}
