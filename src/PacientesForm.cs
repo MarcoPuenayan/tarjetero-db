@@ -67,7 +67,7 @@ namespace TarjeteroApp
 
             // Representante
             panelInput.Controls.Add(new Label() { Text = "Representante:", Anchor = AnchorStyles.Left }, 0, 5);
-            cmbRepresentante = new ComboBox() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 300 };
+            cmbRepresentante = new ComboBox() { DropDownStyle = ComboBoxStyle.DropDown, Width = 300, AutoCompleteMode = AutoCompleteMode.SuggestAppend, AutoCompleteSource = AutoCompleteSource.ListItems };
             panelInput.Controls.Add(cmbRepresentante, 1, 5);
 
             // Buttons

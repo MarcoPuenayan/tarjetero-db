@@ -46,19 +46,19 @@ namespace TarjeteroApp
             
             // Paciente
             panelInput.Controls.Add(new Label() { Text = "Paciente:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 0);
-            cmbPaciente = new ComboBox() { Width = 300, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbPaciente = new ComboBox() { Width = 300, DropDownStyle = ComboBoxStyle.DropDown, AutoCompleteMode = AutoCompleteMode.SuggestAppend, AutoCompleteSource = AutoCompleteSource.ListItems };
             // Evento para cargar historial
             cmbPaciente.SelectionChangeCommitted += (s, e) => CargarHistorial();
             panelInput.Controls.Add(cmbPaciente, 1, 0);
 
             // Vacuna
             panelInput.Controls.Add(new Label() { Text = "Vacuna:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 1);
-            cmbVacuna = new ComboBox() { Width = 300, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbVacuna = new ComboBox() { Width = 300, DropDownStyle = ComboBoxStyle.DropDown, AutoCompleteMode = AutoCompleteMode.SuggestAppend, AutoCompleteSource = AutoCompleteSource.ListItems };
             panelInput.Controls.Add(cmbVacuna, 1, 1);
             
             // Personal
             panelInput.Controls.Add(new Label() { Text = "Personal Salud:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 2);
-            cmbPersonal = new ComboBox() { Width = 300, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbPersonal = new ComboBox() { Width = 300, DropDownStyle = ComboBoxStyle.DropDown, AutoCompleteMode = AutoCompleteMode.SuggestAppend, AutoCompleteSource = AutoCompleteSource.ListItems };
             panelInput.Controls.Add(cmbPersonal, 1, 2);
 
             // Dosis
