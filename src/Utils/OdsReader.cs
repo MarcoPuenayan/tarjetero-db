@@ -64,10 +64,10 @@ namespace TarjeteroApp.Utils
                         
                         foreach (XmlNode row in rows)
                         {
-                            DataRow dr = dt.NewRow();
-                            var cells = row.SelectNodes("table:table-cell", nsmgr);
+                            // Include covered cells to maintain column alignment
+                            var cells = row.SelectNodes("table:table-cell | table:covered-table-cell", nsmgr);
+                            List<string> rowValues = new List<string>();
                             
-                            int columnIndex = 0;
                             foreach (XmlNode cell in cells)
                             {
                                 int repeat = 1;
@@ -76,44 +76,38 @@ namespace TarjeteroApp.Utils
                                     int.TryParse(cell.Attributes["table:number-columns-repeated"].Value, out repeat);
                                 }
 
-                                string cellValue = GetCellValue(cell, nsmgr);
+                                string cellValue = (cell.Name == "table:covered-table-cell") ? "" : GetCellValue(cell, nsmgr);
 
-                                // Optimization: If cell is empty and repeats many times, it's likely filling the row end.
-                                // We ignore massive repeats of empty content to prevent 65k columns issue.
+                                // Optimization logic...
                                 if (string.IsNullOrEmpty(cellValue) && repeat > 10)
                                 {
-                                    // Only process up to existing columns count (fill blanks) or skip
-                                    // If we are far right, just stop processing this cell's repetitions
-                                    if (columnIndex > 100) 
+                                    if (rowValues.Count > 100) 
                                     {
                                         continue; 
                                     }
-                                    // Cap repeat if it's small enough to be relevant but large enough to be annoying
                                     if(repeat > 20) repeat = 20; 
                                 }
 
-                                // Hard limit for safety
                                 if (repeat > 1000) repeat = 1000; 
 
                                 for (int i = 0; i < repeat; i++)
                                 {
-                                    if (columnIndex >= 256) break; // Hard Limit for columns
-
-                                    // Ensure column exists
-                                    while (columnIndex >= dt.Columns.Count)
-                                    {
-                                        dt.Columns.Add("Column" + (dt.Columns.Count + 1));
-                                    }
-
-                                    DataRow targetRow; 
-                                    // If we are just building struct, we use `dr`. 
-                                    // Wait, we can't add row until it aligns with schema? 
-                                    // No, DataTable allows adding row with missing values, but not extra values.
-                                    // We'll dynamically add columns.
-                                    
-                                    dr[columnIndex] = cellValue;
-                                    columnIndex++;
+                                    if (rowValues.Count >= 256) break;
+                                    rowValues.Add(cellValue);
                                 }
+                            }
+
+                            // Now add to DataTable
+                            while (rowValues.Count > dt.Columns.Count)
+                            {
+                                dt.Columns.Add("Column" + (dt.Columns.Count + 1));
+                            }
+
+                            // Pad row if shorter than max columns (optional, or just add what we have)
+                            DataRow dr = dt.NewRow();
+                            for(int k=0; k<rowValues.Count; k++)
+                            {
+                                dr[k] = rowValues[k];
                             }
                             dt.Rows.Add(dr);
                         }
@@ -152,17 +146,30 @@ namespace TarjeteroApp.Utils
 
         private static string GetCellValue(XmlNode cell, XmlNamespaceManager nsmgr)
         {
-            // Usually value is in office:value" or text:p child
-            // Priority: text:p content.
-            // But sometimes values are dates or numbers.
-            
-            var textNode = cell.SelectSingleNode("text:p", nsmgr);
-            if (textNode != null) return textNode.InnerText;
-            
-            if (cell.Attributes["office:value"] != null)
-                return cell.Attributes["office:value"].Value;
-                
-            return "";
+            // Robust Value Extraction
+            // 1. Check for text:p (paragraphs) - join multiple lines if present
+            var paragraphs = cell.SelectNodes("text:p", nsmgr);
+            if (paragraphs != null && paragraphs.Count > 0)
+            {
+                List<string> lines = new List<string>();
+                foreach (XmlNode p in paragraphs)
+                {
+                    // Check for nested spans too
+                    lines.Add(p.InnerText);
+                }
+                string combined = string.Join("\n", lines).Trim();
+                if (!string.IsNullOrEmpty(combined)) return combined;
+            }
+
+            // 2. Check attributes for value types (float, date, etc)
+            if (cell.Attributes["office:value"] != null) return cell.Attributes["office:value"].Value;
+            if (cell.Attributes["office:date-value"] != null) return cell.Attributes["office:date-value"].Value;
+            if (cell.Attributes["office:time-value"] != null) return cell.Attributes["office:time-value"].Value;
+            if (cell.Attributes["office:string-value"] != null) return cell.Attributes["office:string-value"].Value;
+            if (cell.Attributes["office:boolean-value"] != null) return cell.Attributes["office:boolean-value"].Value;
+
+            // 3. Last resort: InnerText (might match styles or other xml)
+            return cell.InnerText.Trim();
         }
     }
 }

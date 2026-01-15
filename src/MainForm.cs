@@ -45,7 +45,11 @@ namespace TarjeteroApp
             // Vacunación
             menuVacunacion = new ToolStripMenuItem("Vacunación");
             itemNuevaVacuna = new ToolStripMenuItem("Registrar Vacuna", null, OpenVacunacionForm);
+            var itemTarjetero = new ToolStripMenuItem("Ver Tarjetero Digital", null, (s, e) => new TarjeteroDigitalForm().ShowDialog(this));
+            
             menuVacunacion.DropDownItems.Add(itemNuevaVacuna);
+            menuVacunacion.DropDownItems.Add(new ToolStripSeparator());
+            menuVacunacion.DropDownItems.Add(itemTarjetero);
 
             // Reportes
             var itemReportes = new ToolStripMenuItem("Reportes", null, (s, e) => new ReportesForm().ShowDialog(this));

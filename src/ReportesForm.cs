@@ -71,7 +71,7 @@ namespace TarjeteroApp
                         p.historia_clinica AS 'Historia Clinica',
                         p.apellidos || ' ' || p.nombres AS 'Paciente',
                         p.fecha_nacimiento AS 'F. Nacimiento',
-                        CAST((julianday(rv.fecha_aplicacion) - julianday(p.fecha_nacimiento)) / 30.44 AS INT) AS 'Edad (Meses)',
+                        COALESCE(rv.edad_al_vacunar_meses, CAST((julianday(rv.fecha_aplicacion) - julianday(p.fecha_nacimiento)) / 30.44 AS INT)) AS 'Edad (Meses)',
                         p.sexo AS 'Sexo',
                         v.nombre_biologico AS 'Vacuna',
                         rv.numero_dosis AS 'Dosis',

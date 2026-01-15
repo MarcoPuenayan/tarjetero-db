@@ -9,7 +9,7 @@ namespace TarjeteroApp
     public class GestionVacunasForm : Form
     {
         private DataGridView grid;
-        private TextBox txtNombre, txtSiglas, txtDescripcion;
+        private TextBox txtNombre, txtSiglas, txtDescripcion, txtEdad, txtDosis;
         private Button btnGuardar, btnEliminar, btnLimpiar, btnModificar;
         private int? idSeleccionado = null;
 
@@ -28,9 +28,9 @@ namespace TarjeteroApp
             // Panel de Entrada de Datos
             TableLayoutPanel panelInput = new TableLayoutPanel();
             panelInput.Dock = DockStyle.Top;
-            panelInput.Height = 150;
+            panelInput.Height = 220;
             panelInput.ColumnCount = 2;
-            panelInput.RowCount = 3;
+            panelInput.RowCount = 5;
             panelInput.Padding = new Padding(10);
             
             // Nombre
@@ -47,6 +47,16 @@ namespace TarjeteroApp
             panelInput.Controls.Add(new Label() { Text = "Descripción / Enfermedad:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 2);
             txtDescripcion = new TextBox() { Width = 400 };
             panelInput.Controls.Add(txtDescripcion, 1, 2);
+
+            // Edad Recomendada
+            panelInput.Controls.Add(new Label() { Text = "Edad / Grupo Etario:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 3);
+            txtEdad = new TextBox() { Width = 300, PlaceholderText = "Ej: 0 a 11 meses" };
+            panelInput.Controls.Add(txtEdad, 1, 3);
+
+            // Dosis Esquema
+            panelInput.Controls.Add(new Label() { Text = "Dosis / Esquema:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 4);
+            txtDosis = new TextBox() { Width = 300, PlaceholderText = "Ej: 1ra, 2da, Refuerzo..." };
+            panelInput.Controls.Add(txtDosis, 1, 4);
 
             // Panel de Botones
             FlowLayoutPanel panelBotones = new FlowLayoutPanel();
@@ -97,6 +107,8 @@ namespace TarjeteroApp
             txtNombre.Clear();
             txtSiglas.Clear();
             txtDescripcion.Clear();
+            txtEdad.Clear();
+            txtDosis.Clear();
             idSeleccionado = null;
             btnModificar.Enabled = false;
             btnGuardar.Enabled = true;
@@ -115,6 +127,8 @@ namespace TarjeteroApp
                 txtNombre.Text = row.Cells["nombre_biologico"].Value?.ToString();
                 txtSiglas.Text = row.Cells["siglas"].Value?.ToString();
                 txtDescripcion.Text = row.Cells["descripcion_enfermedad"].Value?.ToString();
+                txtEdad.Text = row.Cells["edad_recomendada"].Value?.ToString();
+                txtDosis.Text = row.Cells["dosis_esquema"].Value?.ToString();
 
                 btnModificar.Enabled = true;
                 btnGuardar.Enabled = false;
@@ -138,12 +152,14 @@ namespace TarjeteroApp
 
             try 
             {
-                string sql = "UPDATE Vacunas SET nombre_biologico = @n, siglas = @s, descripcion_enfermedad = @d WHERE id_vacuna = @id";
+                string sql = "UPDATE Vacunas SET nombre_biologico = @n, siglas = @s, descripcion_enfermedad = @d, edad_recomendada = @e, dosis_esquema = @do WHERE id_vacuna = @id";
                 var parameters = new SQLiteParameter[]
                 {
                     new SQLiteParameter("@n", txtNombre.Text),
                     new SQLiteParameter("@s", txtSiglas.Text),
                     new SQLiteParameter("@d", txtDescripcion.Text),
+                    new SQLiteParameter("@e", txtEdad.Text),
+                    new SQLiteParameter("@do", txtDosis.Text),
                     new SQLiteParameter("@id", idSeleccionado)
                 };
 
@@ -168,12 +184,14 @@ namespace TarjeteroApp
 
             try 
             {
-                string query = "INSERT INTO Vacunas (nombre_biologico, siglas, descripcion_enfermedad) VALUES (@nombre, @siglas, @descripcion)";
+                string query = "INSERT INTO Vacunas (nombre_biologico, siglas, descripcion_enfermedad, edad_recomendada, dosis_esquema) VALUES (@nombre, @siglas, @descripcion, @edad, @dosis)";
                 var parameters = new SQLiteParameter[]
                 {
                     new SQLiteParameter("@nombre", txtNombre.Text),
                     new SQLiteParameter("@siglas", txtSiglas.Text),
-                    new SQLiteParameter("@descripcion", txtDescripcion.Text)
+                    new SQLiteParameter("@descripcion", txtDescripcion.Text),
+                    new SQLiteParameter("@edad", txtEdad.Text),
+                    new SQLiteParameter("@dosis", txtDosis.Text)
                 };
 
                 DatabaseHelper.ExecuteNonQuery(query, parameters);

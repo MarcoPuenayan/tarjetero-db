@@ -13,6 +13,7 @@ namespace TarjeteroApp
             try 
             {
                 DatabaseHelper.InitializeDatabase();
+                DatabaseHelper.SeedDefaults();
             }
             catch (Exception ex)
             {

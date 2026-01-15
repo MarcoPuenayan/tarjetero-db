@@ -10,6 +10,11 @@ namespace TarjeteroApp.Data
         private static string DbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tarjetero.db");
         private static string ConnectionString => $"Data Source={DbPath};Version=3;";
 
+        public static SQLiteConnection GetConnection()
+        {
+            return new SQLiteConnection(ConnectionString);
+        }
+
         public static void InitializeDatabase()
         {
             if (!File.Exists(DbPath))
@@ -28,7 +33,9 @@ namespace TarjeteroApp.Data
                             id_vacuna INTEGER PRIMARY KEY AUTOINCREMENT,
                             nombre_biologico TEXT NOT NULL,
                             siglas TEXT,
-                            descripcion_enfermedad TEXT
+                            descripcion_enfermedad TEXT,
+                            edad_recomendada TEXT,
+                            dosis_esquema TEXT
                         );
 
                         -- 2. Personal
@@ -52,10 +59,12 @@ namespace TarjeteroApp.Data
                         -- 4. Pacientes
                         CREATE TABLE IF NOT EXISTS Pacientes (
                             id_paciente INTEGER PRIMARY KEY AUTOINCREMENT,
+                            cedula TEXT UNIQUE,
                             historia_clinica TEXT UNIQUE NOT NULL,
                             nombres TEXT NOT NULL,
                             apellidos TEXT NOT NULL,
                             fecha_nacimiento TEXT NOT NULL,
+                            nacionalidad TEXT,
                             sexo TEXT CHECK (sexo IN ('M', 'F')),
                             id_representante INTEGER,
                             FOREIGN KEY (id_representante) REFERENCES Representantes(id_representante)
@@ -84,6 +93,111 @@ namespace TarjeteroApp.Data
                         cmd.ExecuteNonQuery();
                     }
                 }
+                
+                SeedVacunas();
+            }
+
+            // Migrations for existing databases
+            using (var conn = new SQLiteConnection(ConnectionString))
+            {
+                conn.Open();
+                try {
+                    using (var cmd = new SQLiteCommand("ALTER TABLE Vacunas ADD COLUMN edad_recomendada TEXT", conn)) cmd.ExecuteNonQuery();
+                } catch { } // Column exists or error
+                
+                try {
+                    using (var cmd = new SQLiteCommand("ALTER TABLE Vacunas ADD COLUMN dosis_esquema TEXT", conn)) cmd.ExecuteNonQuery();
+                } catch { } // Column exists or error
+
+                // Migration for Pacientes (Cedula, Nacionalidad)
+                try {
+                    using (var cmd = new SQLiteCommand("ALTER TABLE Pacientes ADD COLUMN cedula TEXT", conn)) cmd.ExecuteNonQuery();
+                } catch { }
+                try {
+                    using (var cmd = new SQLiteCommand("ALTER TABLE Pacientes ADD COLUMN nacionalidad TEXT", conn)) cmd.ExecuteNonQuery();
+                } catch { }
+            }
+        }
+
+        public static void SeedVacunas()
+        {
+            using (var conn = new SQLiteConnection(ConnectionString))
+            {
+                conn.Open();
+                // Check if empty
+                using (var cmdCount = new SQLiteCommand("SELECT COUNT(*) FROM Vacunas", conn))
+                {
+                    long count = (long)cmdCount.ExecuteScalar();
+                    if (count > 0) return;
+                }
+
+                // Insert defaults based on the user provided image
+                string[] vaccines = new[] {
+                    "BCG|BCG|Tuberculosis",
+                    "HB|HB|Hepatitis B",
+                    "Rotavirus|ROTAVIRUS|Rotavirus",
+                    "fIPV|FIPV|Polio Inactivada",
+                    "bOPV|BOPV|Polio Oral Bivalente",
+                    "Neumococo|NEUMOCOCO|Neumococo",
+                    "Pentavalente|PENTAVALENTE|Difteria, Tétanos, Tosferina, Hepatitis B, Haemophilus influenzae tipo b",
+                    "SRP|SRP|Sarampión, Rubéola, Paperas",
+                    "FA|FA|Fiebre Amarilla",
+                    "Varicela|VARICELA|Varicela",
+                    "DPT|DPT|Difteria, Tétanos, Tosferina",
+                    "HPV|HPV|Virus del Papiloma Humano",
+                    "dT adulto|DT|Difteria y Tétanos (Adulto)"
+                };
+
+                using (var trans = conn.BeginTransaction())
+                {
+                    foreach (var v in vaccines)
+                    {
+                        var parts = v.Split('|');
+                        string sql = "INSERT INTO Vacunas (nombre_biologico, siglas, descripcion_enfermedad) VALUES (@nom, @sig, @desc)";
+                        using (var cmd = new SQLiteCommand(sql, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@nom", parts[0]);
+                            cmd.Parameters.AddWithValue("@sig", parts[1]);
+                            cmd.Parameters.AddWithValue("@desc", parts[2]);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    trans.Commit();
+                }
+            }
+        }
+
+        public static void SeedPersonal()
+        {
+            using (var conn = new SQLiteConnection(ConnectionString))
+            {
+                conn.Open();
+                using (var cmdCount = new SQLiteCommand("SELECT COUNT(*) FROM Personal_Salud", conn))
+                {
+                    long count = (long)cmdCount.ExecuteScalar();
+                    if (count > 0) return;
+                }
+
+                // Insert default user for imports
+                string sql = "INSERT INTO Personal_Salud (id_personal, cedula, nombres_completos, cargo) VALUES (1, '9999999999', 'SISTEMA IMPORTACION', 'SISTEMA')";
+                using (var cmd = new SQLiteCommand(sql, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public static void SeedDefaults()
+        {
+            try 
+            {
+                SeedVacunas();
+                SeedPersonal();
+            }
+            catch (Exception ex)
+            {
+                // Create a silent log or rethrow dependent on needs
+                Console.WriteLine("Error seeding defaults: " + ex.Message);
             }
         }
 
@@ -104,6 +218,22 @@ namespace TarjeteroApp.Data
                         adapter.Fill(dt);
                         return dt;
                     }
+                }
+            }
+        }
+
+        public static object? ExecuteScalar(string query, SQLiteParameter[]? parameters = null)
+        {
+            using (var conn = new SQLiteConnection(ConnectionString))
+            {
+                conn.Open();
+                using (var cmd = new SQLiteCommand(query, conn))
+                {
+                    if (parameters != null)
+                    {
+                        cmd.Parameters.AddRange(parameters);
+                    }
+                    return cmd.ExecuteScalar();
                 }
             }
         }

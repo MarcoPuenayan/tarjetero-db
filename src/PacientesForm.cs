@@ -10,12 +10,16 @@ namespace TarjeteroApp
     public class PacientesForm : Form
     {
         private DataGridView gridPacientes;
-        private TextBox txtHC, txtNombres, txtApellidos;
+        private TextBox txtHC, txtNombres, txtApellidos, txtCedula, txtNacionalidad;
         private DateTimePicker dtpNacimiento;
         private ComboBox cmbSexo;
-        private ComboBox cmbRepresentante;
+        
+        // Campos Representante
+        private TextBox txtRepCedula, txtRepNombres, txtRepRelacion, txtRepTelefono, txtRepDireccion;
+
         private Button btnGuardar, btnEliminar, btnLimpiar, btnModificar;
         private int? idSeleccionado = null;
+        private long? idRepresentanteActual = null;
 
         public PacientesForm()
         {
@@ -25,54 +29,104 @@ namespace TarjeteroApp
 
         private void InitializeComponent()
         {
-            this.Text = "Gestión de Pacientes";
-            this.Size = new Size(900, 700);
+            this.Text = "Gestión de Pacientes y Representantes";
+            this.Size = new Size(1100, 700);
             this.StartPosition = FormStartPosition.CenterScreen;
             
-            // Layout Panels
+            // Main Container (Split: Top for Input, Bottom for Grid)
+            SplitContainer splitMain = new SplitContainer();
+            splitMain.Dock = DockStyle.Fill;
+            splitMain.Orientation = Orientation.Horizontal;
+            splitMain.SplitterDistance = 350; // Enough spacce for 2 group boxes
+            splitMain.FixedPanel = FixedPanel.Panel1;
+
+            // Input Container (Left: Patient, Right: Representative)
             TableLayoutPanel panelInput = new TableLayoutPanel();
-            panelInput.RowCount = 6;
+            panelInput.Dock = DockStyle.Fill;
+            panelInput.RowCount = 1;
+            panelInput.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             panelInput.ColumnCount = 2;
-            panelInput.Dock = DockStyle.Top;
-            panelInput.Height = 250;
-            panelInput.Padding = new Padding(10);
+            panelInput.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            panelInput.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             
-            // Controls
-            // HC
-            panelInput.Controls.Add(new Label() { Text = "Historia Clínica:", Anchor = AnchorStyles.Left }, 0, 0);
-            txtHC = new TextBox() { Width = 200 };
-            panelInput.Controls.Add(txtHC, 1, 0);
+            // --- GRUPO PACIENTE ---
+            GroupBox grpPaciente = new GroupBox() { Text = "Datos del Paciente", Dock = DockStyle.Fill, Padding = new Padding(10) };
+            TableLayoutPanel layoutPac = new TableLayoutPanel() { Dock = DockStyle.Fill, RowCount = 7, ColumnCount = 2, AutoScroll = true };
+            
+            // 0. Cedula
+            layoutPac.Controls.Add(new Label() { Text = "Cédula de Identidad:", Anchor = AnchorStyles.Left }, 0, 0);
+            txtCedula = new TextBox() { Width = 200 };
+            layoutPac.Controls.Add(txtCedula, 1, 0);
 
-            // Nombres
-            panelInput.Controls.Add(new Label() { Text = "Nombres:", Anchor = AnchorStyles.Left }, 0, 1);
-            txtNombres = new TextBox() { Width = 300 };
-            panelInput.Controls.Add(txtNombres, 1, 1);
+            // 1. HC
+            layoutPac.Controls.Add(new Label() { Text = "Historia Clínica Única (HCU):", Anchor = AnchorStyles.Left }, 0, 1);
+            txtHC = new TextBox() { Width = 200, PlaceholderText = "Dejar vacío para generar auto" };
+            layoutPac.Controls.Add(txtHC, 1, 1);
 
-            // Apellidos
-            panelInput.Controls.Add(new Label() { Text = "Apellidos:", Anchor = AnchorStyles.Left }, 0, 2);
-            txtApellidos = new TextBox() { Width = 300 };
-            panelInput.Controls.Add(txtApellidos, 1, 2);
+            // 2. Nombres
+            layoutPac.Controls.Add(new Label() { Text = "Nombres:", Anchor = AnchorStyles.Left }, 0, 2);
+            txtNombres = new TextBox() { Width = 250 };
+            layoutPac.Controls.Add(txtNombres, 1, 2);
 
-            // Fecha Nac
-            panelInput.Controls.Add(new Label() { Text = "Fecha Nacimiento:", Anchor = AnchorStyles.Left }, 0, 3);
+            // 3. Apellidos
+            layoutPac.Controls.Add(new Label() { Text = "Apellidos:", Anchor = AnchorStyles.Left }, 0, 3);
+            txtApellidos = new TextBox() { Width = 250 };
+            layoutPac.Controls.Add(txtApellidos, 1, 3);
+
+            // 4. Nacionalidad
+            layoutPac.Controls.Add(new Label() { Text = "Nacionalidad:", Anchor = AnchorStyles.Left }, 0, 4);
+            txtNacionalidad = new TextBox() { Width = 200 };
+            layoutPac.Controls.Add(txtNacionalidad, 1, 4);
+
+            // 5. Fecha Nacimiento
+            layoutPac.Controls.Add(new Label() { Text = "Fecha Nacimiento:", Anchor = AnchorStyles.Left }, 0, 5);
             dtpNacimiento = new DateTimePicker() { Format = DateTimePickerFormat.Short, Width = 150 };
-            panelInput.Controls.Add(dtpNacimiento, 1, 3);
+            layoutPac.Controls.Add(dtpNacimiento, 1, 5);
 
-            // Sexo
-            panelInput.Controls.Add(new Label() { Text = "Sexo:", Anchor = AnchorStyles.Left }, 0, 4);
+            // 6. Sexo
+            layoutPac.Controls.Add(new Label() { Text = "Sexo:", Anchor = AnchorStyles.Left }, 0, 6);
             cmbSexo = new ComboBox() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 100 };
             cmbSexo.Items.AddRange(new object[] { "M", "F" });
             cmbSexo.SelectedIndex = 0;
-            panelInput.Controls.Add(cmbSexo, 1, 4);
+            layoutPac.Controls.Add(cmbSexo, 1, 6);
 
-            // Representante
-            panelInput.Controls.Add(new Label() { Text = "Representante:", Anchor = AnchorStyles.Left }, 0, 5);
-            cmbRepresentante = new ComboBox() { DropDownStyle = ComboBoxStyle.DropDown, Width = 300, AutoCompleteMode = AutoCompleteMode.SuggestAppend, AutoCompleteSource = AutoCompleteSource.ListItems };
-            panelInput.Controls.Add(cmbRepresentante, 1, 5);
+            grpPaciente.Controls.Add(layoutPac);
+            
+            // --- GRUPO REPRESENTANTE ---
+            GroupBox grpRep = new GroupBox() { Text = "Datos del Representante", Dock = DockStyle.Fill, Padding = new Padding(10) };
+            TableLayoutPanel layoutRep = new TableLayoutPanel() { Dock = DockStyle.Fill, RowCount = 5, ColumnCount = 2, AutoScroll = true };
 
-            // Buttons
+            layoutRep.Controls.Add(new Label() { Text = "Cédula:", Anchor = AnchorStyles.Left }, 0, 0);
+            txtRepCedula = new TextBox() { Width = 200 };
+            // Evento para buscar si existe el representante al salir de la cédula
+            txtRepCedula.Leave += TxtRepCedula_Leave;
+            layoutRep.Controls.Add(txtRepCedula, 1, 0);
+
+            layoutRep.Controls.Add(new Label() { Text = "Nombres Completos:", Anchor = AnchorStyles.Left }, 0, 1);
+            txtRepNombres = new TextBox() { Width = 250 };
+            layoutRep.Controls.Add(txtRepNombres, 1, 1);
+
+            layoutRep.Controls.Add(new Label() { Text = "Parentesco/Relación:", Anchor = AnchorStyles.Left }, 0, 2);
+            txtRepRelacion = new TextBox() { Width = 200 };
+            layoutRep.Controls.Add(txtRepRelacion, 1, 2);
+
+            layoutRep.Controls.Add(new Label() { Text = "Teléfono:", Anchor = AnchorStyles.Left }, 0, 3);
+            txtRepTelefono = new TextBox() { Width = 200 };
+            layoutRep.Controls.Add(txtRepTelefono, 1, 3);
+            
+            layoutRep.Controls.Add(new Label() { Text = "Dirección:", Anchor = AnchorStyles.Left }, 0, 4);
+            txtRepDireccion = new TextBox() { Width = 250 };
+            layoutRep.Controls.Add(txtRepDireccion, 1, 4);
+
+            grpRep.Controls.Add(layoutRep);
+
+            // Add Groups to Input Panel
+            panelInput.Controls.Add(grpPaciente, 0, 0);
+            panelInput.Controls.Add(grpRep, 1, 0);
+
+            // Buttons Panel
             FlowLayoutPanel panelBotones = new FlowLayoutPanel();
-            panelBotones.Dock = DockStyle.Top;
+            panelBotones.Dock = DockStyle.Bottom;
             panelBotones.Height = 50;
             panelBotones.Padding = new Padding(10);
             
@@ -93,6 +147,10 @@ namespace TarjeteroApp
             txtBuscar.TextChanged += (s, e) => FiltrarGrid(txtBuscar.Text);
 
             panelBotones.Controls.AddRange(new Control[] { btnGuardar, btnModificar, btnLimpiar, btnEliminar, lblBuscar, txtBuscar });
+            
+            // Add panels to Split Top
+            splitMain.Panel1.Controls.Add(panelInput);
+            splitMain.Panel1.Controls.Add(panelBotones);
 
             // Grid
             gridPacientes = new DataGridView();
@@ -103,38 +161,35 @@ namespace TarjeteroApp
             gridPacientes.MultiSelect = false;
             gridPacientes.SelectionChanged += Grid_SelectionChanged;
 
-            this.Controls.Add(gridPacientes);
-            this.Controls.Add(panelBotones);
-            this.Controls.Add(panelInput);
+            splitMain.Panel2.Controls.Add(gridPacientes);
+
+            this.Controls.Add(splitMain);
         }
 
         private void LoadData()
         {
             try
             {
-                // Cargar Pacientes en Grid (Join para ver nombre representante)
+                // Cargar Pacientes con datos de Representante
                 string queryGrid = @"
                     SELECT 
-                        p.id_paciente, p.historia_clinica, p.nombres, p.apellidos, 
-                        p.fecha_nacimiento, p.sexo, p.id_representante,
-                        r.nombres AS representante
+                        p.id_paciente, p.cedula, p.historia_clinica, p.nombres, p.apellidos, 
+                        p.nacionalidad, p.fecha_nacimiento, p.sexo, p.id_representante,
+                        r.cedula AS rep_cedula,
+                        r.nombres AS rep_nombres,
+                        r.telefono AS rep_telefono,
+                        r.direccion AS rep_direccion,
+                        r.relacion AS rep_parentesco
                     FROM Pacientes p
                     LEFT JOIN Representantes r ON p.id_representante = r.id_representante";
                 
                 var dtPacientes = DatabaseHelper.ExecuteQuery(queryGrid);
                 gridPacientes.DataSource = dtPacientes;
-                if (gridPacientes.Columns["id_representante"] != null)
-                    gridPacientes.Columns["id_representante"].Visible = false;
+                
+                // Ocultar columnas internas
+                if (gridPacientes.Columns["id_representante"] != null) gridPacientes.Columns["id_representante"].Visible = false;
+                if (gridPacientes.Columns["id_paciente"] != null) gridPacientes.Columns["id_paciente"].Visible = false;
 
-                // Cargar Combo Representantes
-                string queryRep = "SELECT id_representante, nombres || ' - ' || cedula AS display FROM Representantes";
-                var dtRep = DatabaseHelper.ExecuteQuery(queryRep);
-                
-                cmbRepresentante.DataSource = dtRep;
-                cmbRepresentante.DisplayMember = "display";
-                cmbRepresentante.ValueMember = "id_representante";
-                cmbRepresentante.SelectedIndex = -1; // Default empty
-                
                 LimpiarCampos();
             }
             catch (Exception ex)
@@ -143,31 +198,121 @@ namespace TarjeteroApp
             }
         }
 
+        private void TxtRepCedula_Leave(object? sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtRepCedula.Text)) return;
+
+            try
+            {
+                string query = "SELECT * FROM Representantes WHERE cedula = @ced";
+                var dt = DatabaseHelper.ExecuteQuery(query, new SQLiteParameter[] { new SQLiteParameter("@ced", txtRepCedula.Text.Trim()) });
+                
+                if (dt.Rows.Count > 0)
+                {
+                    var row = dt.Rows[0];
+                    txtRepNombres.Text = row["nombres"].ToString();
+                    txtRepTelefono.Text = row["telefono"].ToString();
+                    txtRepDireccion.Text = row["direccion"].ToString();
+                    txtRepRelacion.Text = row["relacion"].ToString();
+                    idRepresentanteActual = Convert.ToInt64(row["id_representante"]);
+                }
+                else
+                {
+                    idRepresentanteActual = null;
+                }
+            }
+            catch { /* Ignore */ }
+        }
+
+        private long GestionarRepresentante()
+        {
+            if (string.IsNullOrWhiteSpace(txtRepCedula.Text))
+                throw new Exception("La cédula del representante es obligatoria.");
+
+            // Verificar si existe por Cédula
+            string queryCheck = "SELECT id_representante FROM Representantes WHERE cedula = @ced";
+            var dt = DatabaseHelper.ExecuteQuery(queryCheck, new SQLiteParameter[] { new SQLiteParameter("@ced", txtRepCedula.Text.Trim()) });
+
+            long idRep;
+
+            if (dt.Rows.Count > 0)
+            {
+                // Existe -> Actualizar datos
+                idRep = Convert.ToInt64(dt.Rows[0]["id_representante"]);
+                string update = @"UPDATE Representantes SET 
+                                    nombres = @nom, 
+                                    telefono = @tel, 
+                                    direccion = @dir, 
+                                    relacion = @par 
+                                  WHERE id_representante = @id";
+                
+                DatabaseHelper.ExecuteNonQuery(update, new SQLiteParameter[] {
+                    new SQLiteParameter("@nom", txtRepNombres.Text),
+                    new SQLiteParameter("@tel", txtRepTelefono.Text),
+                    new SQLiteParameter("@dir", txtRepDireccion.Text),
+                    new SQLiteParameter("@par", txtRepRelacion.Text),
+                    new SQLiteParameter("@id", idRep)
+                });
+            }
+            else
+            {
+                // Nuevo -> Insertar
+                string insert = @"INSERT INTO Representantes (cedula, nombres, telefono, direccion, relacion) 
+                                  VALUES (@ced, @nom, @tel, @dir, @par)";
+                
+                DatabaseHelper.ExecuteNonQuery(insert, new SQLiteParameter[] {
+                    new SQLiteParameter("@ced", txtRepCedula.Text),
+                    new SQLiteParameter("@nom", txtRepNombres.Text),
+                    new SQLiteParameter("@tel", txtRepTelefono.Text),
+                    new SQLiteParameter("@dir", txtRepDireccion.Text),
+                    new SQLiteParameter("@par", txtRepRelacion.Text)
+                });
+
+                // Obtener ID generado
+                var dtId = DatabaseHelper.ExecuteQuery("SELECT last_insert_rowid()");
+                idRep = Convert.ToInt64(dtId.Rows[0][0]);
+            }
+            return idRep;
+        }
+
         private void BtnGuardar_Click(object? sender, EventArgs e)
         {
             try {
-                if (string.IsNullOrWhiteSpace(txtHC.Text) || string.IsNullOrWhiteSpace(txtNombres.Text))
+                if (string.IsNullOrWhiteSpace(txtNombres.Text))
                 {
-                    MessageBox.Show("Campos obligatorios vacíos (HC, Nombres)");
+                    MessageBox.Show("El nombre del paciente es obligatorio.");
                     return;
                 }
 
+                // Generar HCU automático si está vacío
+                if (string.IsNullOrWhiteSpace(txtHC.Text))
+                {
+                    txtHC.Text = "A-" + DateTime.Now.ToString("yyyyMMddHHmmss");
+                }
+
+                // 1. Gestionar Representante
+                long idRep = GestionarRepresentante();
+
+                // 2. Guardar Paciente
                 string sql = @"
-                    INSERT INTO Pacientes (historia_clinica, nombres, apellidos, fecha_nacimiento, sexo, id_representante) 
-                    VALUES (@hc, @nom, @ape, @fec, @sex, @idrep)";
+                    INSERT INTO Pacientes (cedula, historia_clinica, nombres, apellidos, nacionalidad, fecha_nacimiento, sexo, id_representante) 
+                    VALUES (@ced, @hc, @nom, @ape, @nac, @fec, @sex, @idrep)";
 
                 var parameters = new SQLiteParameter[] {
+                    new SQLiteParameter("@ced", txtCedula.Text),
                     new SQLiteParameter("@hc", txtHC.Text),
                     new SQLiteParameter("@nom", txtNombres.Text),
                     new SQLiteParameter("@ape", txtApellidos.Text),
+                    new SQLiteParameter("@nac", txtNacionalidad.Text),
                     new SQLiteParameter("@fec", dtpNacimiento.Value.ToString("yyyy-MM-dd")),
                     new SQLiteParameter("@sex", cmbSexo.SelectedItem?.ToString() ?? "M"),
-                    new SQLiteParameter("@idrep", cmbRepresentante.SelectedValue ?? DBNull.Value)
+                    new SQLiteParameter("@idrep", idRep)
                 };
 
                 DatabaseHelper.ExecuteNonQuery(sql, parameters);
-                MessageBox.Show("Paciente registrado correctamente");
+                MessageBox.Show("Paciente y Representante registrados correctamente");
                 LimpiarCampos();
+                // No necesitamos recargar a full si solo añadimos uno, pero por consistencia:
                 LoadData();
             }
             catch(Exception ex) {
@@ -177,13 +322,24 @@ namespace TarjeteroApp
 
         private void LimpiarCampos()
         {
+            txtCedula.Clear();
             txtHC.Clear();
             txtNombres.Clear();
             txtApellidos.Clear();
+            txtNacionalidad.Clear();
             dtpNacimiento.Value = DateTime.Now;
             cmbSexo.SelectedIndex = 0;
-            cmbRepresentante.SelectedIndex = -1;
+            
+            // Rep fields
+            txtRepCedula.Clear();
+            txtRepNombres.Clear();
+            txtRepTelefono.Clear();
+            txtRepDireccion.Clear();
+            txtRepRelacion.Clear();
+            
             idSeleccionado = null;
+            idRepresentanteActual = null;
+            
             btnModificar.Enabled = false;
             btnGuardar.Enabled = true;
             btnEliminar.Enabled = false;
@@ -198,20 +354,37 @@ namespace TarjeteroApp
                 if (row.Cells["id_paciente"].Value == DBNull.Value || row.Cells["id_paciente"].Value == null) return;
 
                 idSeleccionado = Convert.ToInt32(row.Cells["id_paciente"].Value);
+                txtCedula.Text = row.Cells["cedula"].Value?.ToString();
                 txtHC.Text = row.Cells["historia_clinica"].Value?.ToString();
                 txtNombres.Text = row.Cells["nombres"].Value?.ToString();
                 txtApellidos.Text = row.Cells["apellidos"].Value?.ToString();
+                txtNacionalidad.Text = row.Cells["nacionalidad"].Value?.ToString();
                 
                 if (DateTime.TryParse(row.Cells["fecha_nacimiento"].Value?.ToString(), out DateTime fec))
                     dtpNacimiento.Value = fec;
 
                 cmbSexo.SelectedItem = row.Cells["sexo"].Value?.ToString();
                 
-                // Set combo value
+                // Cargar datos representante del grid (JOIN)
                 if (row.Cells["id_representante"].Value != DBNull.Value)
-                    cmbRepresentante.SelectedValue = Convert.ToInt64(row.Cells["id_representante"].Value);
+                {
+                    txtRepCedula.Text = row.Cells["rep_cedula"].Value?.ToString();
+                    txtRepNombres.Text = row.Cells["rep_nombres"].Value?.ToString();
+                    txtRepTelefono.Text = row.Cells["rep_telefono"].Value?.ToString();
+                    txtRepDireccion.Text = row.Cells["rep_direccion"].Value?.ToString();
+                    txtRepRelacion.Text = row.Cells["rep_parentesco"].Value?.ToString();
+                    idRepresentanteActual = Convert.ToInt64(row.Cells["id_representante"].Value);
+                }
                 else
-                    cmbRepresentante.SelectedIndex = -1;
+                {
+                     // Limpiar campos rep si no tiene
+                    txtRepCedula.Clear();
+                    txtRepNombres.Clear();
+                    txtRepTelefono.Clear();
+                    txtRepDireccion.Clear();
+                    txtRepRelacion.Clear();
+                    idRepresentanteActual = null;
+                }
 
                 btnModificar.Enabled = true;
                 btnGuardar.Enabled = false;
@@ -227,41 +400,55 @@ namespace TarjeteroApp
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtHC.Text) || string.IsNullOrWhiteSpace(txtNombres.Text))
+            if (string.IsNullOrWhiteSpace(txtNombres.Text))
             {
-                MessageBox.Show("Campos obligatorios vacíos (HC, Nombres)");
+                MessageBox.Show("El nombre del paciente es obligatorio.");
                 return;
+            }
+
+            // Generar HCU automático si está vacío
+            if (string.IsNullOrWhiteSpace(txtHC.Text))
+            {
+                txtHC.Text = "A-" + DateTime.Now.ToString("yyyyMMddHHmmss");
             }
 
             try 
             {
+                // 1. Gestionar o Actualizar Representante
+                long idRep = GestionarRepresentante();
+
+                // 2. Actualizar Paciente
                 string sql = @"UPDATE Pacientes SET 
+                    cedula = @ced,
                     historia_clinica = @hc, 
                     nombres = @nom, 
                     apellidos = @ape, 
+                    nacionalidad = @nac,
                     fecha_nacimiento = @fec, 
                     sexo = @sex, 
                     id_representante = @idrep 
                     WHERE id_paciente = @id";
 
                 var parameters = new SQLiteParameter[] {
+                    new SQLiteParameter("@ced", txtCedula.Text),
                     new SQLiteParameter("@hc", txtHC.Text),
                     new SQLiteParameter("@nom", txtNombres.Text),
                     new SQLiteParameter("@ape", txtApellidos.Text),
+                    new SQLiteParameter("@nac", txtNacionalidad.Text),
                     new SQLiteParameter("@fec", dtpNacimiento.Value.ToString("yyyy-MM-dd")),
                     new SQLiteParameter("@sex", cmbSexo.SelectedItem?.ToString() ?? "M"),
-                    new SQLiteParameter("@idrep", cmbRepresentante.SelectedValue ?? DBNull.Value),
+                    new SQLiteParameter("@idrep", idRep),
                     new SQLiteParameter("@id", idSeleccionado)
                 };
 
                 DatabaseHelper.ExecuteNonQuery(sql, parameters);
-                MessageBox.Show("Paciente modificado correctamente.");
+                MessageBox.Show("Datos modificados correctamente.");
                 LimpiarCampos();
                 LoadData();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al modificar paciente: " + ex.Message);
+                MessageBox.Show("Error al modificar: " + ex.Message);
             }
         }
 
@@ -309,7 +496,17 @@ namespace TarjeteroApp
                     {
                         // Escape single quotes for safety
                         string safeText = texto.Replace("'", "''"); 
-                        dt.DefaultView.RowFilter = string.Format("nombres LIKE '%{0}%' OR apellidos LIKE '%{0}%' OR historia_clinica LIKE '%{0}%'", safeText);
+                        // Search in Patient Name, HC, Rep Name, Rep Cedula
+                        string filter = string.Format(
+                            "cedula LIKE '%{0}%' OR " +
+                            "nombres LIKE '%{0}%' OR " +
+                            "apellidos LIKE '%{0}%' OR " +
+                            "historia_clinica LIKE '%{0}%' OR " +
+                            "rep_nombres LIKE '%{0}%' OR " +
+                            "rep_cedula LIKE '%{0}%'", 
+                            safeText);
+                            
+                        dt.DefaultView.RowFilter = filter;
                     }
                 }
             }

@@ -146,10 +146,25 @@ namespace TarjeteroApp
                     return;
                 }
 
+                // Calcular edad al vacunar
+                int edadMeses = 0;
+                try 
+                {
+                    string dobSql = "SELECT fecha_nacimiento FROM Pacientes WHERE id_paciente = @id";
+                    var dobObj = DatabaseHelper.ExecuteScalar(dobSql, new SQLiteParameter[] { new SQLiteParameter("@id", cmbPaciente.SelectedValue) });
+                    if (dobObj != null && DateTime.TryParse(dobObj.ToString(), out DateTime dob))
+                    {
+                        var fechaVac = dtpFecha.Value;
+                        edadMeses = ((fechaVac.Year - dob.Year) * 12) + fechaVac.Month - dob.Month;
+                        if (fechaVac.Day < dob.Day) edadMeses--;
+                    }
+                }
+                catch { /* Ignore calc errors */ }
+
                 string sql = @"
                     INSERT INTO Registro_Vacunacion 
-                    (id_paciente, id_vacuna, id_personal, fecha_aplicacion, numero_dosis, lote_biologico, observaciones) 
-                    VALUES (@pid, @vid, @psid, @fecha, @dosis, @lote, @obs)";
+                    (id_paciente, id_vacuna, id_personal, fecha_aplicacion, numero_dosis, lote_biologico, observaciones, edad_al_vacunar_meses) 
+                    VALUES (@pid, @vid, @psid, @fecha, @dosis, @lote, @obs, @edad)";
 
                 var parameters = new SQLiteParameter[] {
                     new SQLiteParameter("@pid", cmbPaciente.SelectedValue),
@@ -158,7 +173,8 @@ namespace TarjeteroApp
                     new SQLiteParameter("@fecha", dtpFecha.Value.ToString("yyyy-MM-dd HH:mm:ss")),
                     new SQLiteParameter("@dosis", cmbDosis.SelectedItem.ToString()),
                     new SQLiteParameter("@lote", txtLote.Text),
-                    new SQLiteParameter("@obs", txtObservaciones.Text)
+                    new SQLiteParameter("@obs", txtObservaciones.Text),
+                    new SQLiteParameter("@edad", edadMeses)
                 };
 
                 DatabaseHelper.ExecuteNonQuery(sql, parameters);
