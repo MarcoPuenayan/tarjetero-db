@@ -40,6 +40,18 @@ namespace TarjeteroApp
             this.Size = new Size(800, 600);
             this.StartPosition = FormStartPosition.CenterScreen;
 
+            // SplitContainer principal
+            SplitContainer splitMain = new SplitContainer();
+            splitMain.Dock = DockStyle.Fill;
+            splitMain.Orientation = Orientation.Horizontal;
+            splitMain.SplitterDistance = 270;
+            splitMain.FixedPanel = FixedPanel.Panel1;
+            splitMain.BorderStyle = BorderStyle.FixedSingle;
+
+            // Panel superior: Formulario
+            Panel panelSuperior = new Panel();
+            panelSuperior.Dock = DockStyle.Fill;
+
             TableLayoutPanel panelInput = new TableLayoutPanel();
             panelInput.Dock = DockStyle.Top;
             panelInput.Height = 220; // Más alto por más campos
@@ -89,16 +101,20 @@ namespace TarjeteroApp
 
             panelBotones.Controls.AddRange(new Control[] { btnGuardar, btnModificar, btnLimpiar, btnEliminar });
 
+            panelSuperior.Controls.Add(panelInput);
+            panelSuperior.Controls.Add(panelBotones);
+            splitMain.Panel1.Controls.Add(panelSuperior);
+
+            // Panel inferior: Grilla
             grid = new DataGridView();
             grid.Dock = DockStyle.Fill;
             grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             grid.MultiSelect = false;
             grid.SelectionChanged += Grid_SelectionChanged;
+            splitMain.Panel2.Controls.Add(grid);
 
-            this.Controls.Add(grid);
-            this.Controls.Add(panelBotones);
-            this.Controls.Add(panelInput);
+            this.Controls.Add(splitMain);
         }
 
         private void BtnGuardar_Click(object? sender, EventArgs e)

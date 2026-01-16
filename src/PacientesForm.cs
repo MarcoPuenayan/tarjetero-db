@@ -25,6 +25,7 @@ namespace TarjeteroApp
         {
             InitializeComponent();
             LoadData();
+            LoadAutoCompleteData();
         }
 
         private void InitializeComponent()
@@ -37,8 +38,9 @@ namespace TarjeteroApp
             SplitContainer splitMain = new SplitContainer();
             splitMain.Dock = DockStyle.Fill;
             splitMain.Orientation = Orientation.Horizontal;
-            splitMain.SplitterDistance = 350; // Enough spacce for 2 group boxes
-            splitMain.FixedPanel = FixedPanel.Panel1;
+            splitMain.SplitterDistance = 400; // Espacio para formularios de paciente y representante
+            splitMain.BorderStyle = BorderStyle.Fixed3D;
+            splitMain.SplitterWidth = 5;
 
             // Input Container (Left: Patient, Right: Representative)
             TableLayoutPanel panelInput = new TableLayoutPanel();
@@ -55,7 +57,12 @@ namespace TarjeteroApp
             
             // 0. Cedula
             layoutPac.Controls.Add(new Label() { Text = "Cédula de Identidad:", Anchor = AnchorStyles.Left }, 0, 0);
-            txtCedula = new TextBox() { Width = 200 };
+            txtCedula = new TextBox() 
+            { 
+                Width = 200,
+                AutoCompleteMode = AutoCompleteMode.SuggestAppend,
+                AutoCompleteSource = AutoCompleteSource.CustomSource
+            };
             layoutPac.Controls.Add(txtCedula, 1, 0);
 
             // 1. HC
@@ -65,7 +72,12 @@ namespace TarjeteroApp
 
             // 2. Nombres
             layoutPac.Controls.Add(new Label() { Text = "Nombres:", Anchor = AnchorStyles.Left }, 0, 2);
-            txtNombres = new TextBox() { Width = 250 };
+            txtNombres = new TextBox() 
+            { 
+                Width = 250,
+                AutoCompleteMode = AutoCompleteMode.SuggestAppend,
+                AutoCompleteSource = AutoCompleteSource.CustomSource
+            };
             layoutPac.Controls.Add(txtNombres, 1, 2);
 
             // 3. Apellidos
@@ -97,13 +109,23 @@ namespace TarjeteroApp
             TableLayoutPanel layoutRep = new TableLayoutPanel() { Dock = DockStyle.Fill, RowCount = 5, ColumnCount = 2, AutoScroll = true };
 
             layoutRep.Controls.Add(new Label() { Text = "Cédula:", Anchor = AnchorStyles.Left }, 0, 0);
-            txtRepCedula = new TextBox() { Width = 200 };
+            txtRepCedula = new TextBox() 
+            { 
+                Width = 200,
+                AutoCompleteMode = AutoCompleteMode.SuggestAppend,
+                AutoCompleteSource = AutoCompleteSource.CustomSource
+            };
             // Evento para buscar si existe el representante al salir de la cédula
             txtRepCedula.Leave += TxtRepCedula_Leave;
             layoutRep.Controls.Add(txtRepCedula, 1, 0);
 
             layoutRep.Controls.Add(new Label() { Text = "Nombres Completos:", Anchor = AnchorStyles.Left }, 0, 1);
-            txtRepNombres = new TextBox() { Width = 250 };
+            txtRepNombres = new TextBox() 
+            { 
+                Width = 250,
+                AutoCompleteMode = AutoCompleteMode.SuggestAppend,
+                AutoCompleteSource = AutoCompleteSource.CustomSource
+            };
             layoutRep.Controls.Add(txtRepNombres, 1, 1);
 
             layoutRep.Controls.Add(new Label() { Text = "Parentesco/Relación:", Anchor = AnchorStyles.Left }, 0, 2);
@@ -195,6 +217,61 @@ namespace TarjeteroApp
             catch (Exception ex)
             {
                 MessageBox.Show("Error cargando datos: " + ex.Message);
+            }
+        }
+
+        private void LoadAutoCompleteData()
+        {
+            try
+            {
+                // AutoComplete para cédulas de Pacientes
+                var cedulasPacientes = new AutoCompleteStringCollection();
+                var dtCedulasPac = DatabaseHelper.ExecuteQuery(
+                    "SELECT DISTINCT cedula FROM Pacientes WHERE cedula IS NOT NULL AND cedula != '' ORDER BY cedula");
+                
+                foreach (DataRow row in dtCedulasPac.Rows)
+                {
+                    cedulasPacientes.Add(row["cedula"].ToString() ?? string.Empty);
+                }
+                txtCedula.AutoCompleteCustomSource = cedulasPacientes;
+
+                // AutoComplete para nombres completos de Pacientes
+                var nombresPacientes = new AutoCompleteStringCollection();
+                var dtNombresPac = DatabaseHelper.ExecuteQuery(
+                    "SELECT DISTINCT nombres || ' ' || apellidos as fullname FROM Pacientes WHERE nombres IS NOT NULL ORDER BY fullname");
+                
+                foreach (DataRow row in dtNombresPac.Rows)
+                {
+                    nombresPacientes.Add(row["fullname"].ToString() ?? string.Empty);
+                }
+                txtNombres.AutoCompleteCustomSource = nombresPacientes;
+
+                // AutoComplete para cédulas de Representantes
+                var cedulasRep = new AutoCompleteStringCollection();
+                var dtCedulasRep = DatabaseHelper.ExecuteQuery(
+                    "SELECT DISTINCT cedula FROM Representantes WHERE cedula IS NOT NULL AND cedula != '' ORDER BY cedula");
+                
+                foreach (DataRow row in dtCedulasRep.Rows)
+                {
+                    cedulasRep.Add(row["cedula"].ToString() ?? string.Empty);
+                }
+                txtRepCedula.AutoCompleteCustomSource = cedulasRep;
+
+                // AutoComplete para nombres de Representantes
+                var nombresRep = new AutoCompleteStringCollection();
+                var dtNombresRep = DatabaseHelper.ExecuteQuery(
+                    "SELECT DISTINCT nombres FROM Representantes WHERE nombres IS NOT NULL ORDER BY nombres");
+                
+                foreach (DataRow row in dtNombresRep.Rows)
+                {
+                    nombresRep.Add(row["nombres"].ToString() ?? string.Empty);
+                }
+                txtRepNombres.AutoCompleteCustomSource = nombresRep;
+            }
+            catch (Exception ex)
+            {
+                // No mostrar error al usuario, el autocomplete es opcional
+                System.Diagnostics.Debug.WriteLine("Error cargando autocomplete: " + ex.Message);
             }
         }
 
@@ -314,6 +391,7 @@ namespace TarjeteroApp
                 LimpiarCampos();
                 // No necesitamos recargar a full si solo añadimos uno, pero por consistencia:
                 LoadData();
+                LoadAutoCompleteData();
             }
             catch(Exception ex) {
                 MessageBox.Show("Error al guardar: " + ex.Message);
@@ -445,6 +523,7 @@ namespace TarjeteroApp
                 MessageBox.Show("Datos modificados correctamente.");
                 LimpiarCampos();
                 LoadData();
+                LoadAutoCompleteData();
             }
             catch (Exception ex)
             {

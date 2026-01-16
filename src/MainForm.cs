@@ -28,6 +28,7 @@ namespace TarjeteroApp
             this.Text = "Sistema de Tarjetero de Vacunación - Marianitas DB";
             this.Size = new Size(1024, 768);
             this.StartPosition = FormStartPosition.CenterScreen;
+            this.WindowState = FormWindowState.Maximized;
 
             // MENU
             menuStrip = new MenuStrip();
@@ -46,8 +47,10 @@ namespace TarjeteroApp
             menuVacunacion = new ToolStripMenuItem("Vacunación");
             itemNuevaVacuna = new ToolStripMenuItem("Registrar Vacuna", null, OpenVacunacionForm);
             var itemTarjetero = new ToolStripMenuItem("Ver Tarjetero Digital", null, (s, e) => new TarjeteroDigitalForm().ShowDialog(this));
+            var itemProximasVacunas = new ToolStripMenuItem("📅 Próximas Vacunaciones", null, (s, e) => new ProximasVacunasForm().ShowDialog(this));
             
             menuVacunacion.DropDownItems.Add(itemNuevaVacuna);
+            menuVacunacion.DropDownItems.Add(itemProximasVacunas);
             menuVacunacion.DropDownItems.Add(new ToolStripSeparator());
             menuVacunacion.DropDownItems.Add(itemTarjetero);
 
@@ -69,7 +72,7 @@ namespace TarjeteroApp
             
             // Background branding
             Label lblTitle = new Label();
-            lblTitle.Text = "DB Centro de Salud Marianitas";
+            lblTitle.Text = "MXP - Tarjetero de Vacunación";
             lblTitle.Font = new Font("Segoe UI", 24, FontStyle.Bold);
             lblTitle.AutoSize = true;
             lblTitle.Location = new Point(50, 100);

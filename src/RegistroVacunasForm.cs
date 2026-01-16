@@ -28,14 +28,16 @@ namespace TarjeteroApp
         private void InitializeComponent()
         {
             this.Text = "Registrar Vacuna";
-            this.Size = new Size(1100, 650);
+            this.Size = new Size(1100, 700);
             this.StartPosition = FormStartPosition.CenterParent;
 
             SplitContainer split = new SplitContainer();
             split.Dock = DockStyle.Fill;
-            split.Orientation = Orientation.Vertical;
-            split.SplitterDistance = 450;
-            split.BorderStyle = BorderStyle.FixedSingle;
+            split.Orientation = Orientation.Horizontal;
+            split.SplitterDistance = 400; // Espacio para formulario de registro
+            split.BorderStyle = BorderStyle.Fixed3D;
+            split.SplitterWidth = 5;
+
 
             // --- Panel Izquierdo: Formulario ---
             var panelInput = new TableLayoutPanel();
@@ -47,8 +49,10 @@ namespace TarjeteroApp
             // Paciente
             panelInput.Controls.Add(new Label() { Text = "Paciente:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 0);
             cmbPaciente = new ComboBox() { Width = 300, DropDownStyle = ComboBoxStyle.DropDown, AutoCompleteMode = AutoCompleteMode.SuggestAppend, AutoCompleteSource = AutoCompleteSource.ListItems };
-            // Evento para cargar historial
+            // Eventos para cargar historial
             cmbPaciente.SelectionChangeCommitted += (s, e) => CargarHistorial();
+            cmbPaciente.Click += (s, e) => CargarHistorial();
+            cmbPaciente.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { CargarHistorial(); e.Handled = true; e.SuppressKeyPress = true; } };
             panelInput.Controls.Add(cmbPaciente, 1, 0);
 
             // Vacuna
@@ -87,7 +91,7 @@ namespace TarjeteroApp
             btnRegistrar = new Button() { Text = "Registrar Vacunación", Height = 40, Width = 150, BackColor = Color.LightGreen };
             btnRegistrar.Click += BtnRegistrar_Click;
             
-            var panelBtn = new FlowLayoutPanel() { FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill };
+            var panelBtn = new FlowLayoutPanel() { FlowDirection = FlowDirection.LeftToRight, Dock = DockStyle.Fill };
             panelBtn.Controls.Add(btnRegistrar);
             panelInput.Controls.Add(panelBtn, 1, 7);
 

@@ -1143,8 +1143,8 @@ namespace TarjeteroApp
             string sexoStr, string cedula, string nacionalidad, long? idRepresentante)
         {
             // Verificar si existe
-            var checkQuery = "SELECT id_paciente FROM Pacientes WHERE historia_clinica = @hc";
-            var checkParams = new SQLiteParameter[] { new SQLiteParameter("@hc", hc) };
+            var checkQuery = "SELECT id_paciente FROM Pacientes WHERE historia_clinica = @hc and cedula = @cedula";
+            var checkParams = new SQLiteParameter[] { new SQLiteParameter("@hc", hc), new SQLiteParameter("@cedula", cedula) };
             var existing = DatabaseHelper.ExecuteQuery(checkQuery, checkParams);
 
             if (existing.Rows.Count > 0)
