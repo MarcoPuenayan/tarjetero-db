@@ -38,7 +38,7 @@ CREATE TABLE Pacientes (
     nombres TEXT NOT NULL,
     apellidos TEXT NOT NULL,
     fecha_nacimiento TEXT NOT NULL,         -- SQLite no tiene tipo DATE, usa TEXT (ISO8601: YYYY-MM-DD)
-    sexo TEXT CHECK (sexo IN ('M', 'F')),
+    sexo TEXT ,
     id_representante INTEGER,
     FOREIGN KEY (id_representante) REFERENCES Representantes(id_representante)
         ON DELETE SET NULL                  -- Si se borra el repre, el campo queda NULL

@@ -49,7 +49,7 @@ namespace TarjeteroApp.Data
                         -- 3. Representantes
                         CREATE TABLE IF NOT EXISTS Representantes (
                             id_representante INTEGER PRIMARY KEY AUTOINCREMENT,
-                            cedula TEXT UNIQUE,
+                            cedula TEXT ,
                             nombres TEXT NOT NULL,
                             relacion TEXT,
                             telefono TEXT,
@@ -59,13 +59,13 @@ namespace TarjeteroApp.Data
                         -- 4. Pacientes
                         CREATE TABLE IF NOT EXISTS Pacientes (
                             id_paciente INTEGER PRIMARY KEY AUTOINCREMENT,
-                            cedula TEXT UNIQUE,
-                            historia_clinica TEXT UNIQUE NOT NULL,
-                            nombres TEXT NOT NULL,
-                            apellidos TEXT NOT NULL,
-                            fecha_nacimiento TEXT NOT NULL,
+                            cedula TEXT ,
+                            historia_clinica TEXT  NOT NULL,
+                            nombres TEXT  NULL,
+                            apellidos TEXT  NULL,
+                            fecha_nacimiento TEXT  NULL,
                             nacionalidad TEXT,
-                            sexo TEXT CHECK (sexo IN ('M', 'F')),
+                            sexo TEXT NULL,
                             id_representante INTEGER,
                             FOREIGN KEY (id_representante) REFERENCES Representantes(id_representante)
                                 ON DELETE SET NULL
